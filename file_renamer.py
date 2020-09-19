@@ -1,6 +1,6 @@
 import glob
 import os
-import uuid
+from datetime import datetime
 '''
 Drop this file in the directory containing files you wish to rename.
 For each file that contains an exclamation point, it will rename
@@ -10,29 +10,27 @@ exclamation point.
 The file generates a log report summarizing the successfully
 renamed files as well as any files where an OSError exception was raised.
 '''
-def make_report(x):
-    # x is a list
-    status_log_filename = 'renamer_log_' + str(uuid.uuid4()) + '.txt'
-    f = open(status_log_filename, 'w')
-    for item in x:
-        f.write(item)
-        f.write('n')
-    f.close()
+def make_report(l: list):
+    current_time = datetime.now()
+    status_log_filename = 'renamer_log_' + \
+                          current_time.strftime("%Y-%m-%d_%H-%M-%S") + \
+                          '.txt'
+    with open(status_log_filename, 'w') as f:
+        for item in l:
+            f.write(item + '\n')
 
 def main():
     status_log = []
-    for f in glob.glob('*.*'):
-        if ('file_renamer' in f) or ('!' not in f):
-            pass
-        else:
+    for old_filename in glob.glob('*.*'):
+        if '!' in old_filename:
             try:
-                target = f.find('!')
-                new_filename = f[target+1:]
-                os.rename(f, new_filename)
-                status_log.append('Renamed %s as %s' %(f, new_filename))
+                target = old_filename.find('!')
+                new_filename = old_filename[target+1:]
+                os.rename(old_filename, new_filename)
+                status_log.append(f'Renamed {old_filename} as {new_filename}.')
             except OSError:
-                status_log.append('An error occured with file %s' %f)
+                status_log.append(f'An error occured with file {old_filename}.')
+    make_report(status_log)
 
 if __name__ == '__main__':
     main()
-    make_report(status_log)
